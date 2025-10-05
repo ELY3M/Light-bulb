@@ -2,10 +2,8 @@ package own.lightbulb
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.Toast
@@ -21,10 +19,9 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.WindowCompat
 import com.google.common.util.concurrent.ListenableFuture
 import java.util.concurrent.ExecutionException
-
+import android.content.SharedPreferences
 
 class MainActivity : AppCompatActivity() {
     private var camera: Camera? = null
@@ -38,6 +35,7 @@ class MainActivity : AppCompatActivity() {
     private var lightbutton: ImageView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val sharedPreferences: SharedPreferences = this.getSharedPreferences("lightbulb_preferences", MODE_PRIVATE)
         //transparent status bars
         val w = getWindow()
         w.setFlags(
@@ -52,7 +50,6 @@ class MainActivity : AppCompatActivity() {
         previewView = findViewById(R.id.previewView)
         lightbutton = findViewById(R.id.light)
 
-
         lightbutton?.setOnClickListener() {
             if (isBind) {
                 if (cameraflash) {
@@ -60,10 +57,18 @@ class MainActivity : AppCompatActivity() {
                         camera?.cameraControl?.enableTorch(true)
                         lightbutton!!.setImageResource(R.drawable.lightbulb_on_sm)
                         lighton = true
+                        with(sharedPreferences.edit()) {
+                            putBoolean("lighton", true)
+                            apply()
+                        }
                     } else {
                         camera?.cameraControl?.enableTorch(false)
                         lightbutton!!.setImageResource(R.drawable.lightbulb_off_sm)
                         lighton = false
+                        with(sharedPreferences.edit()) {
+                            putBoolean("lighton", false)
+                            apply()
+                        }
                     }
                 }
             }
@@ -166,12 +171,25 @@ class MainActivity : AppCompatActivity() {
         isBind = true
 
         cameraflash = camera?.cameraInfo?.hasFlashUnit()!!
-        Log.i("Lightbulb", "cameraFlash: $cameraflash")
+        Log.i("lightbulb_log", "cameraFlash: $cameraflash")
+
+        val sharedPreferences: SharedPreferences = this.getSharedPreferences("lightbulb_preferences", MODE_PRIVATE)
+        lighton = sharedPreferences.getBoolean("lighton", false)
+        Log.i("lightbulb_log", "lighton: $lighton")
+        if (isBind) {
+            if (cameraflash) {
+                if (lighton) {
+                    lightbutton!!.setImageResource(R.drawable.lightbulb_on_sm)
+                    camera?.cameraControl?.enableTorch(true)
+                } else {
+                    lightbutton!!.setImageResource(R.drawable.lightbulb_off_sm)
+                    camera?.cameraControl?.enableTorch(false)
+                }
+            }
+        }
 
 
     }
-
-
 
     companion object {
         const val PERMISSIONS_REQUEST_CAMERA: Int = 100
