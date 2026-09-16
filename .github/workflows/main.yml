@@ -2,7 +2,9 @@ name: Build APK and publish
 
 on:
   push:
+    branches: [ "*" ]
   pull_request:
+    branches: [ "*" ]
   workflow_dispatch:
   workflow_call:
 
@@ -30,7 +32,9 @@ jobs:
           java-version: 21
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3 
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools'  
         
       - uses: gradle/actions/setup-gradle@v6
         with:
@@ -67,7 +71,6 @@ jobs:
           keyPassword: ${{ secrets.PASSWORD }}
         env:
           BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
-          
         
       - name: Output Signed APK
         run:  echo 'Signed APK is ${{ steps.sign_app.outputs.signedReleaseFile }}' 
